@@ -3,7 +3,7 @@ using System;
 namespace ResultPattern;
 
 /// <summary>
-/// Fachada para crear resultados sin exponer Unit en el uso comun.
+/// Facade (fachada) para crear resultados sin exponer Unit en el uso comun.
 /// </summary>
 public partial class Result
 {
