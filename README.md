@@ -214,7 +214,7 @@ La versión asíncrona es donde el patrón aporta mayor valor, ya que permite en
 
 ### Match / MatchAsync
 
-Usa `Match` o `MatchAsync` para devolver un tipo, manejando ambos casos (éxito o error) según el resultado. Define qué hacer cuando la operación tiene éxito y qué hacer cuando falla.
+Usa `Match` o `MatchAsync` para devolver un tipo, manejando ambos casos (éxito o error) según el resultado.
 
 ```csharp
 string message = await GetUserAsync(id)
