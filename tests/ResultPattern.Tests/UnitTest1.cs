@@ -322,40 +322,40 @@ public class ResultExtensionsSyncTests
     }
 
     [Fact]
-    public void Tap_Should_Execute_Action_On_Success()
+    public void OnSuccess_Should_Execute_Action_On_Success()
     {
         var sideEffect = 0;
-        var result = Result.Ok(5).Tap(x => sideEffect = x);
+        var result = Result.Ok(5).OnSuccess(x => sideEffect = x);
 
         Assert.Equal(5, sideEffect);
         Assert.True(result.IsSuccess);
     }
 
     [Fact]
-    public void Tap_Should_Not_Execute_On_Failure()
+    public void OnSuccess_Should_Not_Execute_On_Failure()
     {
         var sideEffect = 0;
         var result = Result.Failure<int>(Error.General())
-            .Tap(x => sideEffect = 1);
+            .OnSuccess(x => sideEffect = 1);
 
         Assert.Equal(0, sideEffect);
     }
 
     [Fact]
-    public void TapFailure_Should_Execute_On_Failure()
+    public void OnFailure_Should_Execute_On_Failure()
     {
         Error? captured = null;
         var error = Error.Validation("x", "bad");
-        var result = Result.Failure<int>(error).TapFailure(e => captured = e);
+        var result = Result.Failure<int>(error).OnFailure(e => captured = e);
 
         Assert.Equal(error, captured);
     }
 
     [Fact]
-    public void TapFailure_Should_Not_Execute_On_Success()
+    public void OnFailure_Should_Not_Execute_On_Success()
     {
         var sideEffect = 0;
-        var result = Result.Ok(5).TapFailure(e => sideEffect = 1);
+        var result = Result.Ok(5).OnFailure(e => sideEffect = 1);
 
         Assert.Equal(0, sideEffect);
     }
@@ -396,8 +396,8 @@ public class ResultExtensionsSyncTests
             .Ensure(x => x > 0, Error.Validation("x", "negativo"))
             .Map(x => x * 2)
             .Bind(x => Result.Ok(x + 1))
-            .Tap(x => { /* side effect */ })
-            .TapFailure(e => { /* side effect */ });
+            .OnSuccess(x => { /* side effect */ })
+            .OnFailure(e => { /* side effect */ });
 
         Assert.True(result.IsSuccess);
         Assert.Equal(11, result.Value);
@@ -486,47 +486,47 @@ public class ResultExtensionsAsyncTests
     }
 
     [Fact]
-    public async Task TapAsync_Should_Execute_On_Success()
+    public async Task OnSuccessAsync_Should_Execute_On_Success()
     {
         var sideEffect = 0;
 
         var result = await Task.FromResult(Result.Ok(5))
-            .TapAsync(x => sideEffect = x);
+            .OnSuccessAsync(x => sideEffect = x);
 
         Assert.Equal(5, sideEffect);
         Assert.True(result.IsSuccess);
     }
 
     [Fact]
-    public async Task TapAsync_Should_Not_Execute_On_Failure()
+    public async Task OnSuccessAsync_Should_Not_Execute_On_Failure()
     {
         var sideEffect = 0;
 
         var result = await Task.FromResult(Result.Failure<int>(Error.General()))
-            .TapAsync(x => sideEffect = 1);
+            .OnSuccessAsync(x => sideEffect = 1);
 
         Assert.Equal(0, sideEffect);
     }
 
     [Fact]
-    public async Task TapFailureAsync_Should_Execute_On_Failure()
+    public async Task OnFailureAsync_Should_Execute_On_Failure()
     {
         Error? captured = null;
         var error = Error.Validation("x", "bad");
 
         var result = await Task.FromResult(Result.Failure<int>(error))
-            .TapFailureAsync(e => captured = e);
+            .OnFailureAsync(e => captured = e);
 
         Assert.Equal(error, captured);
     }
 
     [Fact]
-    public async Task TapFailureAsync_Should_Not_Execute_On_Success()
+    public async Task OnFailureAsync_Should_Not_Execute_On_Success()
     {
         var sideEffect = 0;
 
         var result = await Task.FromResult(Result.Ok(5))
-            .TapFailureAsync(e => sideEffect = 1);
+            .OnFailureAsync(e => sideEffect = 1);
 
         Assert.Equal(0, sideEffect);
     }
@@ -538,8 +538,8 @@ public class ResultExtensionsAsyncTests
             .EnsureAsync(x => x > 0, Error.Validation("x", "negativo"))
             .MapAsync(x => x * 2)
             .BindAsync(x => Task.FromResult(Result.Ok(x + 1)))
-            .TapAsync(x => { /* side effect */ })
-            .TapFailureAsync(e => { /* side effect */ });
+            .OnSuccessAsync(x => { /* side effect */ })
+            .OnFailureAsync(e => { /* side effect */ });
 
         Assert.True(result.IsSuccess);
         Assert.Equal(11, result.Value);
@@ -552,7 +552,7 @@ public class ResultExtensionsAsyncTests
 
         var result = await Task.FromResult(Result.Ok(5))
             .EnsureAsync(x => false, Error.Validation("x", "fallo"))
-            .TapAsync(x => sideEffect = 1);
+            .OnSuccessAsync(x => sideEffect = 1);
 
         Assert.True(result.IsFailure);
         Assert.Equal(0, sideEffect);

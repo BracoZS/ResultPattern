@@ -13,9 +13,9 @@ public static class ResultExtensions
             ? onSuccess(result.Value)
             : onFailure(result.Error);
 
-    // Match<T>
-    // Ejecuta una accion segun el estado del resultado.
-    public static void Match<T>(
+    // Switch<T>
+    // Ejecuta una accion segun el estado del resultado. Terminal.
+    public static void Switch<T>(
         this Result<T> result,
         Action<T> onSuccess,
         Action<Error> onFailure)
@@ -53,9 +53,9 @@ public static class ResultExtensions
             ? next(result.Value)
             : Result.Failure(result.Error);
 
-    // Tap
+    // OnSuccess
     // Ejecuta una accion lateral si el resultado fue exitoso.
-    public static Result<T> Tap<T>(
+    public static Result<T> OnSuccess<T>(
         this Result<T> result,
         Action<T> action)
     {
@@ -65,9 +65,9 @@ public static class ResultExtensions
         return result;
     }
 
-    // TapFailure
+    // OnFailure
     // Ejecuta una accion lateral si el resultado fallo.
-    public static Result<T> TapFailure<T>(
+    public static Result<T> OnFailure<T>(
         this Result<T> result,
         Action<Error> action)
     {
@@ -104,9 +104,9 @@ public static class ResultExtensions
                 ? onSuccess()
                 : onFailure(result.Error);
 
-    // Match
-    // Ejecuta una accion segun el estado de un Result<Unit>.
-    public static void Match(
+    // Switch
+    // Ejecuta una accion segun el estado de un Result. Terminal.
+    public static void Switch(
         this Result result,
         Action onSuccess,
         Action<Error> onFailure)
@@ -135,9 +135,9 @@ public static class ResultExtensions
                 ? next()
                 : Result.Failure<T>(result.Error);
 
-    // Tap
+    // OnSuccess
     // Ejecuta una accion lateral si el Result fue exitoso.
-    public static Result Tap(
+    public static Result OnSuccess(
         this Result result,
         Action action)
     {
@@ -147,9 +147,9 @@ public static class ResultExtensions
         return result;
     }
 
-    // TapFailure
+    // OnFailure
     // Ejecuta una accion lateral si el Result fallo.
-    public static Result TapFailure(
+    public static Result OnFailure(
         this Result result,
         Action<Error> action)
     {

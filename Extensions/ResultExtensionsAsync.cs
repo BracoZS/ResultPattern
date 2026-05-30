@@ -18,16 +18,16 @@ public static class ResultExtensionsAsync
         return result.Match(onSuccess, onFailure);
     }
 
-    // MatchAsync<T>
-    // Espera el resultado y ejecuta una accion segun su estado.
-    public static async Task MatchAsync<T>(
+    // SwitchAsync<T>
+    // Espera el resultado y ejecuta una accion segun su estado. Terminal.
+    public static async Task SwitchAsync<T>(
         this Task<Result<T>> task,
         Action<T> onSuccess,
         Action<Error> onFailure)
     {
         var result = await task;
 
-        result.Match(onSuccess, onFailure);
+        result.Switch(onSuccess, onFailure);
     }
 
     // MapAsync
@@ -66,26 +66,26 @@ public static class ResultExtensionsAsync
             : Result.Failure(result.Error);
     }
 
-    // TapAsync
+    // OnSuccessAsync
     // Espera el resultado y ejecuta una accion lateral si fue exitoso.
-    public static async Task<Result<T>> TapAsync<T>(
+    public static async Task<Result<T>> OnSuccessAsync<T>(
         this Task<Result<T>> task,
         Action<T> action)
     {
         var result = await task;
 
-        return result.Tap(action);
+        return result.OnSuccess(action);
     }
 
-    // TapFailureAsync
+    // OnFailureAsync
     // Espera el resultado y ejecuta una accion lateral si fallo.
-    public static async Task<Result<T>> TapFailureAsync<T>(
+    public static async Task<Result<T>> OnFailureAsync<T>(
         this Task<Result<T>> task,
         Action<Error> action)
     {
         var result = await task;
 
-        return result.TapFailure(action);
+        return result.OnFailure(action);
     }
 
     // EnsureAsync
@@ -114,16 +114,16 @@ public static class ResultExtensionsAsync
         return result.Match(onSuccess, onFailure);
     }
 
-    // MatchAsync
-    // Espera un Result<Unit> y ejecuta una accion segun su estado.
-    public static async Task MatchAsync(
+    // SwitchAsync
+    // Espera un Result y ejecuta una accion segun su estado. Terminal.
+    public static async Task SwitchAsync(
         this Task<Result> task,
         Action onSuccess,
         Action<Error> onFailure)
     {
         var result = await task;
 
-        result.Match(onSuccess, onFailure);
+        result.Switch(onSuccess, onFailure);
     }
 
     // BindAsync
@@ -163,24 +163,24 @@ public static class ResultExtensionsAsync
             : Result.Failure<T>(result.Error);
     }
 
-    // TapAsync
-    public static async Task<Result> TapAsync(
+    // OnSuccessAsync
+    public static async Task<Result> OnSuccessAsync(
         this Task<Result> task,
         Action action)
     {
         var result = await task;
 
-        return result.Tap(action);
+        return result.OnSuccess(action);
     }
 
-    // TapFailureAsync
-    public static async Task<Result> TapFailureAsync(
+    // OnFailureAsync
+    public static async Task<Result> OnFailureAsync(
         this Task<Result> task,
         Action<Error> action)
     {
         var result = await task;
 
-        return result.TapFailure(action);
+        return result.OnFailure(action);
     }
     #endregion
 }

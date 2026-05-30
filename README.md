@@ -200,35 +200,38 @@ En el ejemplo anterior:
 
 Las extensiones están disponibles en versiones síncronas y asíncronas.
 
-La versión asíncrona es donde el patrón aporta mayor valor, ya que permite encadenar validaciones, repositorios, servicios externos y transformaciones sin necesidad de múltiples `if` anidados.
+La versión asíncrona es donde el patrón aporta mayor valor, ya que permite encadenar validaciones, repositorios, servicios externos y transformaciones sin necesidad de múltiples `if` anidados. Trabaja sobre `Task<Result<T>>` y es la opción más utilizada en aplicaciones modernas, donde predominan operaciones de I/O y composición de resultados.
 
-Trabaja sobre `Task<Result<T>>` y es la opción más utilizada en aplicaciones modernas, donde predominan operaciones de I/O y composición de resultados.
-
+| Funcion | Uso |
+| --- | --- |
+| [`Map` / `MapAsync`](#map--mapasync) | Transforma |
+| [`Bind` / `BindAsync`](#bind--bindasync) | Encadena |
+| [`Ensure` / `EnsureAsync`](#ensure--ensureasync) | Valida |
+| [`OnSuccess` / `OnSuccessAsync`](#onsuccess--onsuccessasync) | Accion en exito |
+| [`OnFailure` / `OnFailureAsync`](#onfailure--onfailureasync) | Accion en fallo |
+| [`Match` / `MatchAsync`](#match--matchasync) | Cierra (retorna valor) |
+| [`Switch` / `SwitchAsync`](#switch--switchasync) | Cierra (ejecuta accion) |
 
 ### Match / MatchAsync
 
-Permiten ejecutar lógica en función del estado del resultado
-
-Usa `Match` o `MatchAsync` para cerrar el flujo y manejar exito o fallo.
+Usa `Match` o `MatchAsync` para devolver un tipo, manejando ambos casos (éxito o error) según el resultado. Define qué hacer cuando la operación tiene éxito y qué hacer cuando falla.
 
 ```csharp
-// 1. Operacion con valor de retorno + proyección (T -> string)
 string message = await GetUserAsync(id)
     .MatchAsync(
         user => $"Usuario: {user.Name}",
         error => $"Error: {error.Message}");
+```
 
-// 2. Solo efectos secundarios (no retorno útil)
+### Switch / SwitchAsync
+
+Usa `Switch` o `SwitchAsync` para cerrar el flujo y **ejecutar una acción**. No devuelve un valor.
+
+```csharp
 await GetUserAsync(id)
-    .MatchAsync(
+    .SwitchAsync(
         user => Console.WriteLine($"Usuario actual: {user.Name}"),
         error => Console.WriteLine(error.Message));
-
-// 3. Operación sin valor de retorno (Result)
-await SaveUserAsync(user)
-    .MatchAsync(
-        () => ShowSaved(),
-        error => ShowError(error.Message));
 ```
 
 ### Map / MapAsync 
@@ -288,52 +291,41 @@ Result<User> syncResult = GetUser(id)
 
 Si el resultado ya es un fallo, la validación no se ejecuta y se conserva el error original..
 
-### Tap / TapAsync
+### OnSuccess / OnSuccessAsync
 
-Usa `Tap` o `TapAsync` para **ejecutar** una accion lateral cuando el `Result` es exitoso, **sin modificar** el valor ni interrumpir el flujo.
+Usa `OnSuccess` o `OnSuccessAsync` para **ejecutar** una accion lateral unicamente cuando el `Result` es **exitoso**, sin modificar el valor **ni interrumpir el flujo**. 
 
 Son útiles para logging, metricas, cache o notificaciones, etc.
 
 ```csharp
 // Async
 Result<User> asyncResult = await GetUserAsync(id)
-    .TapAsync(user => Log($"Usuario encontrado: {user.Id}"));
+    .OnSuccessAsync(user => Log($"Usuario encontrado: {user.Id}"));
 
 // Sync
 Result<User> syncResult = GetUser(id)
-    .Tap(user => Log($"Usuario encontrado: {user.Id}"));
+    .OnSuccess(user => Log($"Usuario encontrado: {user.Id}"));
 ```
 
 > [!TIP]
-> `Tap` es útil cuando necesitas observar el flujo sin interferir con su resultado.
+> `OnSuccess` es útil cuando necesitas observar el flujo sin interferir con su resultado.
 
 
-### TapFailure / TapFailureAsync
+### OnFailure / OnFailureAsync
 
-Usa `TapFailure` o `TapFailureAsync` para ejecutar una accion lateral (logging, métricas, alertas, etc.) cuando la operación falla, sin modificar el resultado. 
+Usa `OnFailure` o `OnFailureAsync` para **ejecutar** una accion lateral (logging, métricas, alertas, etc.) solamente cuando la operación **falla**, sin modificar el resultado **ni interrumpir el flujo**. 
  
 ```csharp
-// Async.
+// Async
 Result<User> asyncResult = await GetUserAsync(id)
-    .TapFailureAsync(error => Log(error.Message));
+    .OnFailureAsync(error => Log(error.Message));
 
-// Sync.
+// Sync
 Result<User> syncResult = GetUser(id)
-    .TapFailure(error => Log(error.Message));
+    .OnFailure(error => Log(error.Message));
 ```
 
 No transforma el error; solo observa el fallo y devuelve el mismo resultado, permitiendo continuar la cadena.
-
-#### Guia Rapida
-
-| Funcion | Uso |
-| --- | --- |
-| `Map` / `MapAsync` | Transforma |
-| `Bind` / `BindAsync` | Encadena |
-| `Ensure` / `EnsureAsync` | Valida |
-| `Tap` / `TapAsync` | Observa |
-| `TapFailure` / `TapFailureAsync` | Accion en fallo |
-| `Match` / `MatchAsync` | Cierra |
 
 ## Ejemplo Completo
 
@@ -345,8 +337,8 @@ public async Task<Result<UserDto>> GetUserDtoAsync(int id)
             user => user.IsActive,
             Error.Validation("User.State", "El usuario no esta activo."))
         .BindAsync(user => LoadPermissionsAsync)
-        .TapAsync(user => Log($"Usuario cargado: {user.Id}"))
-        .TapFailureAsync(error => Log($"Error: {error.Message}"))
+        .OnSuccessAsync(user => Log($"Usuario cargado: {user.Id}"))
+        .OnFailureAsync(error => Log($"Error: {error.Message}"))
         .MapAsync(UserToDto);
 }
 
@@ -378,7 +370,7 @@ public Result<int> CalculateTotal(int price)
         .Ensure(value => value > 0,
                 Error.Validation("Value.Invalid", "El valor debe ser mayor a 0"))
         .Map(value => value * 2)
-        .Tap(value => Log($"Total calculado: {value}"));
+        .OnSuccess(value => Log($"Total calculado: {value}"));
 }
 ```
 
@@ -392,7 +384,7 @@ public Result<int> CalculateTotal(int price)
 - Usa `Map` cuando solo transformes el valor.
 - Usa `Bind` cuando el siguiente paso devuelva un `Result`.
 - Usa `Ensure` para validaciones dentro de la cadena.
-- Usa `Tap` y `TapFailure` para efectos laterales (logs, métricas, etc.).
+- Usa `OnSuccess` y `OnFailure` para efectos laterales (logs, métricas, etc.).
 - Finaliza los flujos con `Match`, `IsFailure` o `IsSuccess`.
 - Mantén los `Code` estables; el `Message` puede cambiar.
 - Si no hay valor válido, devuelve `Error` en lugar de `null`.
@@ -402,7 +394,7 @@ public Result<int> CalculateTotal(int price)
 
 - No uses `Result<T>` para ocultar errores de programación.
 - No accedas a `Value` sin verificar éxito primero.
-- No uses `Tap` o `TapFailure` para modificar el resultado.
+- No uses `OnSuccess` o `OnFailure` para modificar el resultado.
 - No devuelvas `null` como éxito.
 - No mezcles lógica de dominio con manejo de errores en el mismo flujo.
 
