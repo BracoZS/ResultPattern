@@ -1,5 +1,7 @@
 # Result Pattern
 
+[![build](https://github.com/BracoZS/ResultPattern/actions/workflows/build.yml/badge.svg)](https://github.com/BracoZS/ResultPattern/actions/workflows/build.yml)
+
 `Result<T>` representa el resultado de una operacion: `exito` con valor o `fallo` con error.
 
 Sirve para modelar fallos que pertenecen al flujo normal de la aplicacion:
@@ -106,12 +108,12 @@ Console.WriteLine($"Usuario encontrado: {user.Name}");
 `Error` describe un fallo esperado de forma estable.
 
 ```csharp
-public sealed record Error(ErrorType Type, string ErrorCode, string Message);
+public sealed record Error(ErrorType Type, string Code, string Message);
 ```
 | Propiedad   | Tipo        | Descripción                                                                                                                                       |
 | ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Type`      | `ErrorType` | Categoriza el error a nivel general. Permite identificar rápidamente la naturaleza del fallo.                                                     |
-| `ErrorCode` | `string`    | Identificador específico del error dentro del dominio de la aplicación. Debe ser estable y útil para trazabilidad, logs, pruebas e integraciones. |
+| `Code` | `string`    | Identificador específico del error dentro del dominio de la aplicación. Debe ser estable y útil para trazabilidad, logs, pruebas e integraciones. |
 | `Message`   | `string`    | Describe el problema de forma legible para humanos y puede variar según el contexto.                                                              |
 
 
@@ -392,7 +394,7 @@ public Result<int> CalculateTotal(int price)
 - Usa `Ensure` para validaciones dentro de la cadena.
 - Usa `Tap` y `TapFailure` para efectos laterales (logs, métricas, etc.).
 - Finaliza los flujos con `Match`, `IsFailure` o `IsSuccess`.
-- Mantén los `ErrorCode` estables; el `Message` puede cambiar.
+- Mantén los `Code` estables; el `Message` puede cambiar.
 - Si no hay valor válido, devuelve `Error` en lugar de `null`.
 ---
 
