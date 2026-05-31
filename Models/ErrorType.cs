@@ -2,7 +2,7 @@ namespace ResultPattern;
 
 public enum ErrorType
 {
-    // Exito
+    // Éxito
     None,
 
     // Entrada/Permisos
@@ -13,12 +13,12 @@ public enum ErrorType
     // Estado/Recursos
     NotFound,          // Recurso no existe
     Conflict,          // Estado inconsistente (ej: duplicado, concurrencia)
-    InvalidOperation,  // Estado incorrecto para ejecutar la acción)
+    InvalidOperation,  // Estado incorrecto para ejecutar la acción
     NotSupported,      // Operación no soportada en este contexto
 
     // Ejecución
     Timeout,           // Operación excedió tiempo límite
-    Cancelled,         // Operación abortada (token de cancelación, usuario, etc.
+    Cancelled,         // Operación abortada (token de cancelación, usuario, etc.)
 
     // Otros
     General,           // Error no especificado, desconocido

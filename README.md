@@ -76,8 +76,8 @@ public Result<User> CreateUser(string name)
 }
 ```
 
-> [!Note]
-> the result can be returned either explicitly or implicitly through [implicit conversion](#implicit-conversion)
+> [!NOTE]
+> The result can be returned either explicitly or implicitly through [implicit conversion](#implicit-conversion)
 
 #### Properties
 
@@ -117,7 +117,7 @@ public sealed record Error(ErrorType Type, string Code, string Message);
 
 | Property |	Type |	Description
 | ---------|-------|--------------------------|
-| `Type` |	`ErrorType` |	`Categorizes the error at a high level. Makes it easier to identify the nature of the failure.
+| `Type` |	`ErrorType` |	Categorizes the error at a high level. Makes it easier to identify the nature of the failure.
 |`Code` |	`string` |	A domain-specific error identifier. It should remain stable and be useful for tracing, logging, testing, and integrations.
 |`Message` |	`string` |	A human-readable description of the problem. It may vary depending on the context.
 <details> 
@@ -152,7 +152,7 @@ public enum ErrorType
 </details> 
 <br>
 
->[!TIP]
+> [!TIP]
 > The Error type provides static factory methods for representing the most common system errors.
 >
 > You can use the built-in factories to create errors with a consistent format:

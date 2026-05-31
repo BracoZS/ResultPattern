@@ -139,11 +139,11 @@ public class ErrorTests
     [Fact]
     public void Validation_Should_Set_Properties()
     {
-        var error = Error.Validation("User.Email", "El email no es valido.");
+        var error = Error.Validation("User.Email", "The email is not valid.");
 
         Assert.Equal(ErrorType.Validation, error.Type);
         Assert.Equal("Validation.User.Email", error.Code);
-        Assert.Equal("El email no es valido.", error.Message);
+        Assert.Equal("The email is not valid.", error.Message);
     }
 
     [Fact]
@@ -162,17 +162,17 @@ public class ErrorTests
         var error = Error.NotFound("Product");
 
         Assert.Equal("NotFound.Product", error.Code);
-        Assert.DoesNotContain("identificador", error.Message);
+        Assert.DoesNotContain("identifier", error.Message);
     }
 
     [Fact]
     public void Conflict_Should_Set_Properties()
     {
-        var error = Error.Conflict("Order", "La orden ya esta cerrada.");
+        var error = Error.Conflict("Order", "The order is already closed.");
 
         Assert.Equal(ErrorType.Conflict, error.Type);
         Assert.Equal("Conflict.Order", error.Code);
-        Assert.Equal("La orden ya esta cerrada.", error.Message);
+        Assert.Equal("The order is already closed.", error.Message);
     }
 
     [Fact]
@@ -185,11 +185,11 @@ public class ErrorTests
     [Fact]
     public void Internal_Should_Set_Properties()
     {
-        var error = Error.Internal("no se pudo leer config");
+        var error = Error.Internal("could not read config");
 
         Assert.Equal(ErrorType.Internal, error.Type);
         Assert.Equal("Internal.General", error.Code);
-        Assert.Equal("no se pudo leer config", error.Message);
+        Assert.Equal("could not read config", error.Message);
     }
 
     [Fact]
@@ -197,17 +197,17 @@ public class ErrorTests
     {
         var error = Error.Internal();
 
-        Assert.Equal("Ocurrio un error interno.", error.Message);
+        Assert.Equal("An internal error occurred.", error.Message);
     }
 
     [Fact]
     public void General_Should_Set_Properties()
     {
-        var error = Error.General("algo inesperado");
+        var error = Error.General("something unexpected");
 
         Assert.Equal(ErrorType.General, error.Type);
         Assert.Equal("General.Custom", error.Code);
-        Assert.Equal("algo inesperado", error.Message);
+        Assert.Equal("something unexpected", error.Message);
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public class ErrorTests
     {
         var error = Error.General();
 
-        Assert.Equal("Ha ocurrido un error inesperado.", error.Message);
+        Assert.Equal("An unexpected error has occurred.", error.Message);
     }
 }
 

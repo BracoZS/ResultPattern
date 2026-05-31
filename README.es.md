@@ -74,8 +74,8 @@ public Result<User> CreateUser(string name)
 }
 ```
 
-> [!Note]
-> el resultado puede devolverse de forma explícita o implícta mediante [conversión implícita](#conversión-implícita)
+> [!NOTE]
+> El resultado puede devolverse de forma explícita o implícita mediante [conversión implícita](#conversión-implícita)
 
 #### Properties
 
@@ -102,7 +102,7 @@ Console.WriteLine($"Usuario encontrado: {user.Name}");
 ```
 
 > [!WARNING]
-> `Value` solo debe leerse despues de confirmar que el resultado fue exitoso. De lo contrario se producirá una excepción. Este es el comportamiento esperado.
+> `Value` solo debe leerse después de confirmar que el resultado fue exitoso. De lo contrario se producirá una excepción. Este es el comportamiento esperado.
 
 ## `Error` type
 
@@ -166,7 +166,7 @@ Error.General();
 
 ### Conversión implícita
 
-El tipo `Result<T>` soporta conversiones implícitas  para reducir boilerplate y permitir una expresión más natural del flujo [[docs](https://learn.microsoft.com/es-es/dotnet/csharp/language-reference/operators/user-defined-conversion-operators?utm_source=chatgpt.com)].
+El tipo `Result<T>` soporta conversiones implícitas  para reducir boilerplate y permitir una expresión más natural del flujo [[docs](https://learn.microsoft.com/es-es/dotnet/csharp/language-reference/operators/user-defined-conversion-operators)].
 
 Esto permite retornar directamente un `Error` o un valor `T` sin necesidad de envolverlos manualmente en `Result`.
 
@@ -214,7 +214,7 @@ La versión asíncrona es donde el patrón aporta mayor valor, ya que permite en
 
 Usa `Match` o `MatchAsync` para devolver un valor, manejando ambos casos (éxito o error) según el resultado. Define qué hacer cuando la operación tiene éxito y qué hacer cuando falla.
 
-Ambos delegados deben tener el mismo tipo de retorno
+Ambos delegados deben tener el mismo tipo de retorno.
 
 ```csharp
 string message = await GetUserAsync(id)
@@ -252,7 +252,7 @@ Result<UserDto> syncResult = GetUser(id)
 
 ### Bind / BindAsync
 
-`Bind` y `BindAsync` se utilizan para **encadenar** múltiples operaciones dependientes. Usalos  cuando el siguiente paso de la cadena también devuelve un `Result<T>` y, por lo tanto, puede fallar. Permite construir flujos complejos de forma lineal y sin anidaciones.
+`Bind` y `BindAsync` se utilizan para **encadenar** múltiples operaciones dependientes. Úsalos cuando el siguiente paso de la cadena también devuelve un `Result<T>` y, por lo tanto, puede fallar. Permite construir flujos complejos de forma lineal y sin anidaciones.
 
 Si una de las operaciones falla, el error se propaga automáticamente, se devuelve y la ejecución se detiene.
 
@@ -289,13 +289,13 @@ Result<User> syncResult = GetUser(id)
         Error.Validation("User.State", "El usuario no esta activo."));
 ```
 
-Si el resultado ya es un fallo, la validación no se ejecuta y se conserva el error original..
+Si el resultado ya es un fallo, la validación no se ejecuta y se conserva el error original.
 
 ### OnSuccess / OnSuccessAsync
 
-Usa `OnSuccess` o `OnSuccessAsync` para **ejecutar** una accion lateral unicamente cuando el `Result` es **exitoso**, sin modificar el valor **ni interrumpir el flujo**. 
+Usa `OnSuccess` o `OnSuccessAsync` para **ejecutar** una acción lateral únicamente cuando el `Result` es **exitoso**, sin modificar el valor **ni interrumpir el flujo**.
 
-Son útiles para logging, metricas, cache o notificaciones, etc.
+Son útiles para logging, métricas, caché o notificaciones, etc.
 
 ```csharp
 // Async
@@ -313,7 +313,7 @@ Result<User> syncResult = GetUser(id)
 
 ### OnFailure / OnFailureAsync
 
-Usa `OnFailure` o `OnFailureAsync` para **ejecutar** una accion lateral (logging, métricas, alertas, etc.) solamente cuando la operación **falla**, sin modificar el resultado **ni interrumpir el flujo**. 
+Usa `OnFailure` o `OnFailureAsync` para **ejecutar** una acción lateral (logging, métricas, alertas, etc.) solamente cuando la operación **falla**, sin modificar el resultado **ni interrumpir el flujo**.
  
 ```csharp
 // Async
@@ -402,8 +402,3 @@ public Result<int> CalculateTotal(int price)
 
 > [!IMPORTANT]
 > Usa `Result<T>` para controlar el flujo, no para esconderlo.
-
-
-
-
-

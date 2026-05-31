@@ -118,7 +118,7 @@ public static class ResultExtensions
     }
 
     // Bind
-    // 
+    // Encadena otra operación que también puede fallar.
     public static Result Bind(
         this Result result,
         Func<Result> next)
@@ -127,7 +127,7 @@ public static class ResultExtensions
                 : Result.Failure(result.Error);
 
     // Bind <T>
-    // 
+    // Encadena otra operación que devuelve Result<T>.
     public static Result<T> Bind<T>(
         this Result result,
         Func<Result<T>> next)

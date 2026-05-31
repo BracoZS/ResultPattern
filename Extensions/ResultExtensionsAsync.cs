@@ -127,18 +127,7 @@ public static class ResultExtensionsAsync
     }
 
     // BindAsync
-    /// <summary>
-    /// Chains an asynchronous operation to be executed if the preceding asynchronous result is successful.
-    /// </summary>
-    /// <remarks>This method enables fluent composition of asynchronous operations that return a Result.
-    /// If the initial task fails, the next operation is not executed and the failure is propagated.
-    /// </remarks>
-    /// <param name="task">The initial asynchronous operation whose result determines whether the next operation is invoked.</param>
-    /// <param name="next">A function that returns the next asynchronous operation to execute if the initial result is successful.</param>
-    /// <returns>
-    /// A task that represents the asynchronous operation. The result contains the outcome of the next operation if the
-    /// initial result is successful; otherwise, it contains the failure from the initial result.
-    /// </returns>
+    // Espera un Result y encadena otra operación async.
     public static async Task<Result> BindAsync(
         this Task<Result> task,
         Func<Task<Result>> next)
@@ -151,7 +140,7 @@ public static class ResultExtensionsAsync
     }
 
     // BindAsync<T>
-    //
+    // Espera un Result y encadena otra operación async que devuelve Result<T>.
     public static async Task<Result<T>> BindAsync<T>(
         this Task<Result> task,
         Func<Task<Result<T>>> next)
