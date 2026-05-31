@@ -403,3 +403,13 @@ public Result<int> CalculateTotal(int price)
 
 > [!IMPORTANT]
 > Use Result<T> to control the flow, not to hide it.
+
+## Contributing
+
+Contributions are welcome! Feel free to open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 BracoZS
