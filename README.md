@@ -45,6 +45,18 @@ With `Result<T>` you get:
 - Easier composition of operations
 - Improved testability
 
+## Installation
+
+Package: https://www.nuget.org/packages/ResultPattern.Net
+
+```bash
+nuget install ResultPattern.Net
+```
+
+```bash
+dotnet add package ResultPattern.Net
+```
+
 
 ## `Result` type
 
