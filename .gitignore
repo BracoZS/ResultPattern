@@ -3,6 +3,10 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# Local reference files
+API-REFERENCE.md
+DOC-TODO.md
+
 # dotenv files
 .env
 

@@ -23,5 +23,10 @@
     <None Remove="tests\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\README.md" />
+    <None Include="..\README.es.md" />
+  </ItemGroup>
+
 
 </Project>

@@ -2,3 +2,4 @@
   <Project Path="src\ResultPattern.csproj" />
   <Project Path="tests\ResultPattern.Tests.csproj" />
 </Solution>
+
