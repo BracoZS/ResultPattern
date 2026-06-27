@@ -1,47 +1,4 @@
-using System;
-
 namespace ResultPattern;
-
-/// <summary>
-/// Facade (fachada) para crear resultados sin exponer Unit en el uso comun.
-/// </summary>
-public partial class Result
-{
-    // Exito para operaciones con valor.
-    public static Result<T> Ok<T>(T value)      
-        => Result<T>.Ok(value);
-    
-    // Fallo para operaciones con valor.
-    public static Result<T> Failure<T>(Error error)     
-        => Result<T>.Failure(error);
-}
-
-public sealed partial class Result
-{
-    private Result(bool isSuccess, Error error)
-    {
-        IsSuccess = isSuccess;
-        Error = error;
-    }
-
-    public bool IsSuccess { get; }
-    public bool IsFailure => !IsSuccess;
-    public Error Error { get; }
-
-    // factory methods
-    public static Result Ok() 
-        => new(true, Error.None);
-    public static Result Failure(Error error)
-        => new(false, error);
-
-    // implicit operators
-    // Error -> Result
-    public static implicit operator Result(Error error) 
-        => Failure(error);
-
-    public override string ToString() 
-        => IsSuccess ? "Result(Success)" : $"Result(Failure: {Error.Message})";
-}
 
 /// <summary>
 /// Resultado de una operacion que puede terminar en exito o error esperado.
@@ -97,9 +54,36 @@ public sealed class Result<T>
     // Result<T> -> Result
     public static implicit operator Result(Result<T> result)
         => result.IsSuccess
-            ? Result.Ok() 
+            ? Result.Ok()
             : Result.Failure(result.Error);
 
     public override string ToString()
         => IsSuccess ? $"Result(Success: {Value})" : $"Result(Failure: {Error.Message})";
+}
+
+public sealed partial class Result
+{
+    private Result(bool isSuccess, Error error)
+    {
+        IsSuccess = isSuccess;
+        Error = error;
+    }
+
+    public bool IsSuccess { get; }
+    public bool IsFailure => !IsSuccess;
+    public Error Error { get; }
+
+    // factory methods
+    public static Result Ok()
+        => new(true, Error.None);
+    public static Result Failure(Error error)
+        => new(false, error);
+
+    // implicit operators
+    // Error -> Result
+    public static implicit operator Result(Error error)
+        => Failure(error);
+
+    public override string ToString()
+        => IsSuccess ? "Result(Success)" : $"Result(Failure: {Error.Message})";
 }

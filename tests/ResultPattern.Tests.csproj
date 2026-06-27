@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ResultPattern.csproj" />
+    <ProjectReference Include="..\src\ResultPattern.csproj" />
   </ItemGroup>
 
   <ItemGroup>
