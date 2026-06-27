@@ -1,233 +1,145 @@
-# Result Pattern
+# ResultPattern.Net
 
+[![NuGet version](https://img.shields.io/nuget/v/ResultPattern.Net.svg)](https://www.nuget.org/packages/ResultPattern.Net)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![build](https://github.com/BracoZS/ResultPattern/actions/workflows/build.yml/badge.svg)](https://github.com/BracoZS/ResultPattern/actions/workflows/build.yml)
 
-`Result<T>` represents the outcome of an operation: `success` with a value or `failure` with an error.
+Explicit success/failure handling in C# without exceptions for predictable control flow.
 
-It is used to model failures that belong to the normal flow of an application:
+## Why?
 
-* Failures that are part of the application's normal flow.
-* Validation.
-* Resources not found.
-* Data reading.
-* Conflicts.
-* Permissions.
-* Persistence.
-* Invalid responses or expected errors from external services.
-* Flows where each step depends on the previous one.
+The Result pattern makes success and failure explicit in your type system. Every method signature declares that it can fail, and the compiler ensures both paths are handled.
 
-It is useful in situations where an operation can fail normally or when failure is part of the expected behavior.
+- **Explicit control flow** — no hidden try/catch branches, no surprises at runtime
+- **No nulls** — every failure carries a structured Error, never a null reference
+- **Linear pipelines** — chain operations with Map, Bind, and Ensure; errors short-circuit automatically without nesting
+- **Consistent across your codebase** — same pattern for validations, lookups, permissions, and external calls
 
-It does not replace exceptions, it complements them.
+## Highlights
 
-### Why the Result Pattern?
+- **Result\<T\> + Result** — strongly-typed outcomes for value-returning and void operations
+- **Error type** — structured error model with static factories (Validation, NotFound, Conflict, etc.)
+- **Fluent extensions** — Map, Bind, Ensure, OnSuccess, OnFailure, Match — both sync and async
+- **Try / TryAsync** — wrap exceptions into Result automatically with optional error mapping
+- **Implicit conversions** — return `T` or `Error` directly, no wrapping boilerplate
+- **Pipeline composition** — chain operations; errors short-circuit automatically
 
-The `Result` pattern provides a clear and explicit way to manage success and failure without relying on exceptions for control flow.
+## Properties
 
-Instead of throwing exceptions or returning `null`, methods return a structured result that makes outcomes predictable and easier to handle.
+| Property | Type | Description |
+|----------|------|-------------|
+| `IsSuccess` | `bool` | `true` when the operation succeeded |
+| `IsFailure` | `bool` | `true` when the operation failed |
+| `Value` | `T` | The result value (throws on failure) |
+| `Error` | `Error` | The error (`Error.None` on success) |
 
-❌ Problems it solves
-
-Traditional approaches often lead to:
-
-- Hidden control flow through exceptions
-- `null` values and potential `NullReferenceException`s
-- Deeply nested `if` statements
-- Inconsistent error handling across the application
-
-✔️ Benefits
-
-With `Result<T>` you get:
-
-- Explicit success/failure flow
-- Non-exception-based control flow
-- Safer and more predictable APIs
-- Easier composition of operations
-- Improved testability
-
-## Installation
-
-Package: https://www.nuget.org/packages/ResultPattern.Net
-
-```bash
-nuget install ResultPattern.Net
-```
+## Quick Start
 
 ```bash
 dotnet add package ResultPattern.Net
 ```
 
-
-## `Result` type
-
-The fundamental usage of `Result` is by explicitly returning either **success** or **failure**.
-
-`Result` (without a value) is used for operations where only the success or failure of the operation matters.
-
 ```csharp
-public Result SaveUser(User user)
+using ResultPattern;
+
+Result<int> Divide(int a, int b)
 {
-    if (user is null)
-        return Result.Failure(Error.Validation("User.Required", "User is required"));
+    if (b == 0)
+        return Error.Validation("Division.Zero", "Cannot divide by zero");
 
-    _users.Save(user);
-
-    return Result.Ok();
-}
-```
-
-`Result<T>` is used when an operation needs to return a value.
-
-```csharp
-public Result<User> CreateUser(string name)
-{
-    if (string.IsNullOrWhiteSpace(name))
-        return Result<User>.Failure(Error.Validation("User.NotFound", "User is required"));
-
-    return Result<User>.Ok(new User(name));
-}
-```
-
-> [!NOTE]
-> The result can be returned either explicitly or implicitly through [implicit conversion](#implicit-conversion)
-
-#### Properties
-
-`Result<T>` exposes the following properties to inspect the result state:
-
-- `IsSuccess`: Indicates whether the operation succeeded.
-- `IsFailure`: Indicates whether the operation failed. This is the inverse of `IsSuccess`.
-- `Error`: Contains the error associated with a failure. If the result is successful, it contains `Error.None`.
-- `Value`: Contains the result value when the operation succeeds. If the result is a failure, accessing this property throws an exception.
-
-Check `IsSuccess` or `IsFailure` when the flow uses _'early returns'_.
-
-```csharp
-Result<User> result = await GetUserAsync(id);
-
-if (result.IsFailure)
-{
-    Console.WriteLine($"Error: {result.Error.Message}");
-    return;
+    return a / b;
 }
 
-User user = result.Value;
-Console.WriteLine($"User found: {user.Name}");
+var result = Divide(10, 2)
+    .Ensure(x => x > 0, Error.Validation("Result.Negative", "Result must be positive"))
+    .Map(x => x * 2);
+
+Console.WriteLine(result.IsSuccess ? result.Value.ToString() : result.Error.Message);
+// Output: 10
 ```
 
-> [!WARNING]
-> Value should only be accessed after confirming that the result is successful. Otherwise, an exception will be thrown. This is the expected behavior.
+## Usage
 
-
-## `Error` type
-
-`Error` describes an expected failure in a stable and structured way.
+### Basic Result
 
 ```csharp
-public sealed record Error(ErrorType Type, string Code, string Message);
+Result save = Result.Ok();
+Result fail = Result.Failure(Error.Internal("Something went wrong"));
 ```
 
-| Property |	Type |	Description
-| ---------|-------|--------------------------|
-| `Type` |	`ErrorType` |	Categorizes the error at a high level. Makes it easier to identify the nature of the failure.
-|`Code` |	`string` |	A domain-specific error identifier. It should remain stable and be useful for tracing, logging, testing, and integrations.
-|`Message` |	`string` |	A human-readable description of the problem. It may vary depending on the context.
-<details> 
-  <summary>View ErrorType enum</summary>
+### Result with value
 
 ```csharp
-public enum ErrorType
-{
-    // Success
-    None,
+Result<User> user = Result.Ok(new User("Alice"));
+Result<User> error = Result<User>.Failure(Error.NotFound("User", 42));
 
-    // Input / Permissions
-    Validation,        // Invalid input data
-    Unauthorized,      // Not authenticated / invalid credentials
-    Forbidden,         // Insufficient permissions
-
-    // State / Resources
-    NotFound,          // Resource does not exist
-    Conflict,          // Inconsistent state (e.g. duplicate, concurrency)
-    InvalidOperation,  // Invalid state for performing the action
-    NotSupported,      // Operation not supported in this context
-
-    // Execution
-    Timeout,           // Operation exceeded the time limit
-    Cancelled,         // Operation was cancelled (cancellation token, user, etc.)
-
-    // Other
-    General,           // Unspecified or unknown error
-    Internal,          // Internal technical error (bug, unhandled exception)
-}
+// Implicit conversions
+Result<User> a = new User("Alice");
+Result<User> b = Error.NotFound("User", 42);
 ```
-</details> 
-<br>
 
-> [!TIP]
-> The Error type provides static factory methods for representing the most common system errors.
->
-> You can use the built-in factories to create errors with a consistent format:
+### Error factories
 
 ```csharp
-Error.Validation("User.EmailInvalid", "The email address is invalid.");
-Error.NotFound("User.NotFound", $"The user with id '{id}' does not exist.");
-Error.Conflict("User.AlreadyExists", "The user is already registered.");
-Error.Unauthorized("Auth.InvalidCredentials", "The credentials are invalid.");
-Error.Internal("Failed to read configuration.");
+Error.Validation("Email.Invalid", "Invalid email format");
+Error.NotFound("User", 42);
+Error.Conflict("Order.Duplicate", "Order already exists");
+Error.Unauthorized;
+Error.Internal("Failed to read configuration");
 Error.General();
 ```
 
-### Implicit Conversion
-
-`Result<T>` supports implicit conversions to reduce boilerplate and enable a more natural expression of the flow [[docs](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/user-defined-conversion-operators)].
-
-This allows you to return either an `Error` or a value of type `T` directly, without manually wrapping them in a `Result`.
-
-`Error → Result / Result<T>`
-
-`T     → Result<T>`
-
-This reduces boilerplate and makes failure paths more concise, improving readability in methods that return `Result<T>`.
+### Try — catch exceptions into Result
 
 ```csharp
-public async Task<Result<User>> GetUserAsync(int id)
-{
-    var user = await _repo.FindAsync(id);
+Result<int> result = Result.Try(() => int.Parse(input));
 
-    return user is null
-        ? Error.NotFound("User.NotFound", $"The user with id '{id}' does not exist")
-        : user;
-}
+// With custom error mapping
+Result<User> user = Result.Try(
+    () => _repo.Find(id),
+    ex => Error.Internal(ex.Message));
 ```
 
-In the example above:
-
-- `Error → Result<User>` through implicit conversion
-- `User → Result<User>` through implicit conversion
+```csharp
+// Async
+Task<Result<User>> user = Result.TryAsync(
+    () => _repo.FindAsync(id));
+```
 
 ## Extensions
 
-Extensions are available in both synchronous and asynchronous versions.
+### Fluent sync pipeline
 
-The asynchronous version is where the pattern provides the most value, allowing you to chain validations, repositories, external services, and transformations without multiple nested if statements. It operates on `Task<Result<T>>` and is the most common choice in modern applications, where I/O operations and result composition are prevalent.
+```csharp
+Result<Order> result = Validate(request)
+    .Ensure(r => r.Total > 0, Error.Validation("Order.Total", "Must be positive"))
+    .Map(r => new Order(r))
+    .Bind(order => Save(order))
+    .OnSuccess(order => Log($"Order {order.Id} created"))
+    .OnFailure(error => Log($"Failed: {error.Message}"));
+```
 
+### Fluent async pipeline
 
-| Function | Purpose |
-| --- | --- |
-| [`Map` / `MapAsync`](#map--mapasync) | Transform |
-| [`Bind` / `BindAsync`](#bind--bindasync) | Chain |
-| [`Ensure` / `EnsureAsync`](#ensure--ensureasync) | Validate |
-| [`OnSuccess` / `OnSuccessAsync`](#onsuccess--onsuccessasync) | Execute on success |
-| [`OnFailure` / `OnFailureAsync`](#onfailure--onfailureasync) | Execute on failure |
-| [`Match` / `MatchAsync`](#match--matchasync) | Close (returns a value) |
-| [`Switch` / `SwitchAsync`](#switch--switchasync) | Close (executes an action) |
+```csharp
+Task<Result<OrderDto>> result = ValidateAsync(request)
+    .EnsureAsync(r => r.Total > 0, Error.Validation("Order.Total", "Must be positive"))
+    .MapAsync(r => new Order(r))
+    .BindAsync(order => SaveAsync(order))
+    .OnSuccessAsync(order => Log($"Order {order.Id} created"))
+    .OnFailureAsync(error => Log($"Failed: {error.Message}"))
+    .MapAsync(order => new OrderDto(order.Id, order.Total));
+```
 
-### Match / MatchAsync
+### Switch — terminate and execute an action
 
-Use `Match` or `MatchAsync` to return a value by handling both outcomes (success or failure). Define what should happen when the operation succeeds and what should happen when it fails.
+```csharp
+GetUserAsync(id).SwitchAsync(
+    user => Console.WriteLine($"User: {user.Name}"),
+    error => Console.WriteLine(error.Message));
+```
 
-Both delegates must return the same type.
+### Match — terminate and produce a value
 
 ```csharp
 string message = await GetUserAsync(id)
@@ -235,193 +147,31 @@ string message = await GetUserAsync(id)
         user => $"User: {user.Name}",
         error => $"Error: {error.Message}");
 ```
-        
-### Switch / SwitchAsync
 
-Use `Switch` or `SwitchAsync` to terminate the flow and **execute an action**. It does not return a value.
+## Extensions reference
 
-```csharp
-await GetUserAsync(id)
-    .SwitchAsync(
-        user => Console.WriteLine($"Current user: {user.Name}"),
-        error => Console.WriteLine(error.Message));
-```
+| Method | Works on | Purpose |
+|--------|----------|---------|
+| `Map` / `MapAsync` | `Result<T>` / `Task<Result<T>>` | Transform the value |
+| `Bind` / `BindAsync` | `Result<T>` / `Task<Result<T>>` | Chain to another Result |
+| `Ensure` / `EnsureAsync` | `Result<T>` / `Task<Result<T>>` | Validate the value |
+| `OnSuccess` / `OnSuccessAsync` | `Result<T>` / `Task<Result<T>>` | Side effect on success |
+| `OnFailure` / `OnFailureAsync` | `Result<T>` / `Task<Result<T>>` | Side effect on failure |
+| `Match` / `MatchAsync` | `Result<T>` / `Task<Result<T>>` | Close flow, produce value |
+| `Switch` / `SwitchAsync` | `Result<T>` / `Task<Result<T>>` | Close flow, execute action |
 
-### Map / MapAsync
+## Requirements
 
-`Map` and `MapAsync` are used to **transform** the value contained in a successful `Result<T>`.
+- .NET 10.0+
 
-If the result is a failure, the error is propagated without applying the transformation.
-
-```csharp
-// Async: User -> UserDto if GetUserAsync succeeds
-Result<UserDto> asyncResult = await GetUserAsync(id)
-    .MapAsync(user => new UserDto(user.Id, user.Name));
-
-// Sync: synchronous version
-Result<UserDto> syncResult = GetUser(id)
-    .Map(user => new UserDto(user.Id, user.Name));
-```
-
-### Bind / BindAsync
-
-`Bind` and `BindAsync` are used to **chain** multiple dependent operations. Use them when the next step in the chain also returns a `Result<T>` and can therefore fail. They allow complex flows to be expressed linearly, without nesting.
-
-If any operation fails, the error is automatically propagated, returned, and execution stops.
-
-```csharp
-// Chaining with another operation that returns Result
-Result<Profile> asyncResult = await GetUserAsync(id)
-    .BindAsync(user => GetProfileAsync(user.Id));
-
-// Multiple dependent operations
-Result<Order> result = await ValidateRequestAsync(request)
-    .BindAsync(validRequest => CreateOrderAsync(validRequest))
-    .BindAsync(order => ReserveStockAsync(order))
-    .BindAsync(order => SaveOrderAsync(order));
-```
-
-> The flow reads from top to bottom as a sequence of domain steps.
-
-This approach avoids callback hell and deeply nested if statements, keeping the execution flow more declarative and easier to read.
-
-### Ensure / EnsureAsync
-
-Use `Ensure` or `EnsureAsync` to **validate** the value of a successful `Result` without leaving the flow.
-
-```csharp
-// Async
-Result<User> asyncResult = await GetUserAsync(id)
-    .EnsureAsync(
-        user => user.IsActive,
-        Error.Validation("User.State", "The user is not active."));
-
-// Sync
-Result<User> syncResult = GetUser(id)
-    .Ensure(
-        user => user.IsActive,
-        Error.Validation("User.State", "The user is not active."));
-```
-
-If the result is already a failure, the validation is not executed and the original error is preserved.
-
-
-### OnSuccess / OnSuccessAsync
-
-Use `OnSuccess` or `OnSuccessAsync` to **execute** a side effect only when the `Result` is **successful**, **without modifying** the value or interrupting the flow.
-
-They are useful for logging, metrics, caching, notifications, and similar scenarios.
-
-```csharp
-// Async
-Result<User> asyncResult = await GetUserAsync(id)
-    .OnSuccessAsync(user => Log($"User found: {user.Id}"));
-
-// Sync
-Result<User> syncResult = GetUser(id)
-    .OnSuccess(user => Log($"User found: {user.Id}"));
-```
-
-> [!TIP]
-> OnSuccess is useful when you need to observe the flow without affecting its outcome.
-
-### OnFailure / OnFailureAsync
-
-Use `OnFailure` or `OnFailureAsync` to **execute** a side effect (logging, metrics, alerts, etc.) only **when the operation fails**, **without modifying** the result or interrupting the flow.
-
-```csharp
-// Async
-Result<User> asyncResult = await GetUserAsync(id)
-    .OnFailureAsync(error => Log($"Error: {error.Message}"));
-
-// Sync
-Result<User> syncResult = GetUser(id)
-    .OnFailure(error => Log($"Error: {error.Message}"));
-```
-
-It does not transform the error; it only observes the failure and returns the same result, allowing the chain to continue.
-
-## Complete Example
-
-```csharp
-public async Task<Result<UserDto>> GetUserDtoAsync(int id)
-{
-    return await GetUserAsync(id)
-        .EnsureAsync(
-            user => user.IsActive,
-            Error.Validation("User.State", "The user is not active."))
-        .BindAsync(user => LoadPermissionsAsync)
-        .OnSuccessAsync(user => Log($"User loaded: {user.Id}"))
-        .OnFailureAsync(error => Log($"Error: {error.Message}"))
-        .MapAsync(UserToDto);
-}
-
-private static UserDto UserToDto(User user) =>
-    new(user.Id, user.Name);
-```
-Consuming the result:
-
-```csharp
-public async Task<string> GetUserMessageAsync(int id)
-{
-    var result = await _userService.GetUserDtoAsync(id);
-
-    return result.Match(
-        dto => $"User: {dto.Name}",
-        error => $"Error: {error.Message}");
-}
-```
-
-This flow represents a declarative composition where each step operates on the result of the previous one without breaking the chain.
-
-If a step fails, the following steps are not executed. The error is propagated to the end of the flow.
-
-> [!NOTE]
-> The synchronous flow is best suited for pure validations, in-memory transformations, or domain rules that do not require I/O.
-
-```csharp
-public Result<int> CalculateTotal(int price)
-{
-    return Ok(price)
-        .Ensure(value => value > 0,
-                Error.Validation("Value.Invalid", "The value must be greater than 0"))
-        .Map(value => value * 2)
-        .OnSuccess(value => Log($"Calculated total: {value}"));
-}
-```
-
-## Usage Guidelines
-
-##### 🟢 Best Practices
-
-- Use Result<T> for expected use-case failures.
-- Return an Error as soon as a validation fails.
-- Prefer async flows when working with I/O, external services, or repositories.
-- Use Map when you only need to transform the value.
-- Use Bind when the next step returns a Result.
-- Use Ensure for validations within the chain.
-- Use OnSuccess and OnFailure for side effects (logging, metrics, etc.).
-- End flows with Match, IsFailure, or IsSuccess.
-- Keep Code values stable; Message values may change.
-- If there is no valid value, return an Error instead of null.
-
-##### 🔴 Anti-Patterns
-
-- Do not use Result<T> to hide programming errors.
-- Do not access Value without checking for success first.
-- Do not use OnSuccess or OnFailure to modify the result.
-- Do not return null as a successful result.
-- Do not mix domain logic and error handling within the same flow.
-
-> [!IMPORTANT]
-> Use Result<T> to control the flow, not to hide it.
 
 ## Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request.
 
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+[MIT](LICENSE)
 
 Copyright (c) 2026 BracoZS
